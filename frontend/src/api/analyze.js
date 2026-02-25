@@ -9,7 +9,7 @@ export async function analyzeResume({ file, resume_text, required_skills }) {
   formData.append("resume_text", resume_text || "");
   formData.append("required_skills", JSON.stringify(required_skills));
 
-  const res = await fetch("http://localhost:8000/analyze", {
+  const res = await fetch("https://ai-resume-analyzer-modj.onrender.com/analyze", {
     method: "POST",
     body: formData, 
   });
