@@ -8,11 +8,11 @@ export default function Hero() {
     >
       <div className="max-w-6xl mx-auto px-6 text-center">
 
-        {/* Headline */}
+        {/* Headline (LCP element) */}
         <motion.h1
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}   // ✅ use animate
+          transition={{ duration: 0.4 }}
           className="text-4xl md:text-6xl font-bold mb-6 leading-tight"
         >
           AI-Powered Resume Screening <br className="hidden md:block" />
@@ -22,8 +22,8 @@ export default function Hero() {
         {/* Subheading */}
         <motion.p
           initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
+          animate={{ opacity: 1 }}        // ✅ use animate
+          transition={{ delay: 0.1 }}
           className="text-gray-600 max-w-2xl mx-auto text-lg mb-10"
         >
           Instantly analyze resumes, match required skills, and identify top
@@ -32,9 +32,9 @@ export default function Hero() {
 
         {/* CTA Buttons */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}   // ✅ use animate
+          transition={{ delay: 0.2 }}
           className="flex flex-col sm:flex-row justify-center gap-4"
         >
           <a
@@ -55,12 +55,13 @@ export default function Hero() {
         {/* Trust indicators */}
         <motion.p
           initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
+          animate={{ opacity: 1 }}       // ✅ use animate
+          transition={{ delay: 0.3 }}
           className="mt-10 text-sm text-gray-500"
         >
           Trusted by hiring teams • Reduce screening time by up to 60%
         </motion.p>
+
       </div>
     </section>
   );
