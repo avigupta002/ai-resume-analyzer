@@ -1,7 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 import json
-import os
 from dotenv import load_dotenv
 
 from ml.skill_matcher import match_skills
@@ -10,15 +9,15 @@ from utils.ai_resume_improver import improve_resume
 
 load_dotenv()
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-if not OPENAI_API_KEY:
-    raise ValueError("OPENAI_API_KEY is not set")
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+"https://ai-resume-analyzer-6-56px.onrender.com"        
+                   ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -32,7 +31,6 @@ async def analyze(
 ):
     skills = json.loads(required_skills)
 
-    # Extract resume text
     if file:
         if file.filename.endswith(".pdf"):
             resume_text = read_pdf(file.file)

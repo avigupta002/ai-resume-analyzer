@@ -1,16 +1,20 @@
 import os
-from openai import OpenAI
+import requests
+
+HF_API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2"
 
 def improve_resume(resume_text: str, missing_skills: list[str]) -> list[str]:
-    api_key = os.getenv("OPENAI_API_KEY")
-
+    api_key = os.getenv("HF_API_KEY")
     if not api_key:
-        raise ValueError("OPENAI_API_KEY is not set")
+        raise ValueError("HF_API_KEY not set")
 
-    client = OpenAI(api_key=api_key)
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
 
     prompt = f"""
-You are an expert ATS resume reviewer.
+You are an ATS resume expert.
 
 Resume:
 {resume_text}
@@ -18,16 +22,30 @@ Resume:
 Missing skills:
 {', '.join(missing_skills)}
 
-Give clear, actionable resume improvement suggestions
-to increase ATS score and recruiter approval.
-Return bullet points only.
+Give 5–7 clear, actionable resume improvement suggestions.
+Use bullet points.
 """
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.4,
-    )
+    payload = {
+        "inputs": prompt,
+        "parameters": {
+            "max_new_tokens": 250,
+            "temperature": 0.4,
+        },
+    }
 
-    suggestions = response.choices[0].message.content.split("\n")
-    return [s.strip("-• ") for s in suggestions if s.strip()]
+    response = requests.post(HF_API_URL, headers=headers, json=payload, timeout=60)
+
+    if response.status_code != 200:
+        raise RuntimeError(f"Hugging Face error: {response.text}")
+
+    data = response.json()
+
+    # HF returns generated_text
+    text = data[0]["generated_text"]
+
+    return [
+        line.strip("-• ")
+        for line in text.split("\n")
+        if line.strip()
+    ]
