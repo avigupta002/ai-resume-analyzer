@@ -28,7 +28,7 @@ async def analyze(
     file: UploadFile = File(None),
     resume_text: str = Form(""),
     required_skills: str = Form(...),
-    job_description: str = Form(...)
+    job_description: str = Form("")
 ):
     skills = json.loads(required_skills)
 
