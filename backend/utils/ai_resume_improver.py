@@ -1,32 +1,33 @@
-from openai import OpenAI
 import os
+from openai import OpenAI
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+def improve_resume(resume_text: str, missing_skills: list[str]) -> list[str]:
+    api_key = os.getenv("OPENAI_API_KEY")
 
-def improve_resume(resume_text: str, required_skills: list[str]):
+    if not api_key:
+        raise ValueError("OPENAI_API_KEY is not set")
+
+    client = OpenAI(api_key=api_key)
+
     prompt = f"""
-You are an ATS resume expert.
+You are an expert ATS resume reviewer.
 
 Resume:
 {resume_text}
 
-Required Skills:
-{", ".join(required_skills)}
+Missing skills:
+{', '.join(missing_skills)}
 
-Tasks:
-1. Suggest improvements to increase ATS score
-2. Identify missing skills and how to add them
-3. Improve wording using strong action verbs
-4. Suggest quantified achievements
-5. Keep suggestions concise and practical
-
+Give clear, actionable resume improvement suggestions
+to increase ATS score and recruiter approval.
 Return bullet points only.
 """
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
-        temperature=0.4
+        temperature=0.4,
     )
 
-    return response.choices[0].message.content.split("\n")
+    suggestions = response.choices[0].message.content.split("\n")
+    return [s.strip("-• ") for s in suggestions if s.strip()]
