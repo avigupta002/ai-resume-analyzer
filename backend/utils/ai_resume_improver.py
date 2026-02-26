@@ -1,12 +1,12 @@
 import os
 import requests
 
-HF_API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2"
+HF_API_URL = "https://api-inference.huggingface.co/models/google/flan-t5-large"
 
 def improve_resume(resume_text: str, missing_skills: list[str]) -> list[str]:
     api_key = os.getenv("HF_API_KEY")
     if not api_key:
-        raise ValueError("HF_API_KEY not set")
+        return ["AI suggestions unavailable (API key not set)."]
 
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -29,20 +29,30 @@ Use bullet points.
     payload = {
         "inputs": prompt,
         "parameters": {
-            "max_new_tokens": 250,
+            "max_new_tokens": 200,
             "temperature": 0.4,
         },
     }
 
-    response = requests.post(HF_API_URL, headers=headers, json=payload, timeout=60)
+    try:
+        response = requests.post(
+            HF_API_URL,
+            headers=headers,
+            json=payload,
+            timeout=30,
+        )
+        response.raise_for_status()
+        data = response.json()
+    except Exception as e:
+        return [f"AI suggestion service unavailable: {str(e)}"]
 
-    if response.status_code != 200:
-        raise RuntimeError(f"Hugging Face error: {response.text}")
-
-    data = response.json()
-
-    # HF returns generated_text
-    text = data[0]["generated_text"]
+    # Handle HF response safely
+    if isinstance(data, list) and "generated_text" in data[0]:
+        text = data[0]["generated_text"]
+    elif isinstance(data, dict) and "generated_text" in data:
+        text = data["generated_text"]
+    else:
+        return ["AI could not generate suggestions at this time."]
 
     return [
         line.strip("-• ")
