@@ -16,7 +16,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
-"https://ai-resume-analyzer-6-56px.onrender.com"        
+        "https://ai-resume-analyzer-1-ow4o.onrender.com/"
                    ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -46,6 +46,8 @@ async def analyze(
         resume_text=resume_text,
         missing_skills=result["missing_skills"]
     )
+
+
 
     return {
         "score": result["match_percentage"],

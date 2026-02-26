@@ -1,9 +1,11 @@
 import os
 from openai import OpenAI
 
+
 def get_hf_client():
     token = os.getenv("HF_API_KEY")
     if not token:
+        print("HF_API_KEY not found")
         return None
 
     return OpenAI(
@@ -11,10 +13,17 @@ def get_hf_client():
         api_key=token,
     )
 
+
 def improve_resume(resume_text: str, missing_skills: list[str]) -> list[str]:
     client = get_hf_client()
+
+    # Fallback if token missing
     if not client:
         return ["AI suggestions unavailable (HF token not set)."]
+
+    # Fallback if no missing skills
+    if not missing_skills:
+        return ["Resume matches most required skills. Add measurable achievements to strengthen impact."]
 
     prompt = f"""
 You are an ATS resume expert.
@@ -25,9 +34,9 @@ Resume:
 Missing skills:
 {', '.join(missing_skills)}
 
-Give 6–8 specific, actionable resume improvement suggestions.
-Use bullet points only.
-Focus on increasing ATS score.
+Give 6-8 specific, actionable resume improvement suggestions.
+Return each suggestion on a new line.
+Do NOT return paragraph text.
 """
 
     try:
@@ -37,13 +46,36 @@ Focus on increasing ATS score.
             temperature=0.4,
             max_tokens=300,
         )
+
+        # Safely extract content
+        text = response.choices[0].message.content if response.choices else ""
+
+        if not text:
+            return [
+                f"Add experience with {skill}."
+                for skill in missing_skills
+            ]
+
+        # Convert response into clean list
+        lines = [
+            line.strip().lstrip("-• ").strip()
+            for line in text.split("\n")
+            if line.strip()
+        ]
+
+        # If model returned paragraph instead of bullets
+        if len(lines) == 1:
+            lines = [
+                f"Add experience with {skill}."
+                for skill in missing_skills
+            ]
+
+        return lines
+
     except Exception as e:
-        return ["AI suggestion service unavailable."]
+        print("AI ERROR:", e)
 
-    text = response.choices[0].message.content
-
-    return [
-        line.strip("-• ")
-        for line in text.split("\n")
-        if line.strip()
-    ]
+        return [
+            f"Add experience with {skill}."
+            for skill in missing_skills
+        ]
