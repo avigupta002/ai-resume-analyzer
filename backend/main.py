@@ -27,7 +27,8 @@ app.add_middleware(
 async def analyze(
     file: UploadFile = File(None),
     resume_text: str = Form(""),
-    required_skills: str = Form(...)
+    required_skills: str = Form(...),
+    job_description: str = Form(...)
 ):
     skills = json.loads(required_skills)
 
@@ -44,7 +45,8 @@ async def analyze(
     
     ai_suggestions = improve_resume(
         resume_text=resume_text,
-        missing_skills=result["missing_skills"]
+        missing_skills=result["missing_skills"],
+        job_description=job_description
     )
 
 

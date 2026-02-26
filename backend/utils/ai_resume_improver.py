@@ -14,68 +14,87 @@ def get_hf_client():
     )
 
 
-def improve_resume(resume_text: str, missing_skills: list[str]) -> list[str]:
+def improve_resume(
+    resume_text: str,
+    missing_skills: list[str],
+    job_description: str
+) -> list[str]:
+
     client = get_hf_client()
 
-    # Fallback if token missing
     if not client:
         return ["AI suggestions unavailable (HF token not set)."]
 
-    # Fallback if no missing skills
-    if not missing_skills:
-        return ["Resume matches most required skills. Add measurable achievements to strengthen impact."]
+    if not resume_text.strip():
+        return ["Resume text is empty. Please upload a valid resume."]
 
     prompt = f"""
-You are an ATS resume expert.
+You are a professional ATS resume optimization expert.
+
+Analyze the resume against the job description and required skills.
 
 Resume:
 {resume_text}
 
-Missing skills:
-{', '.join(missing_skills)}
+Job Description:
+{job_description}
 
-Give 6-8 specific, actionable resume improvement suggestions.
-Return each suggestion on a new line.
-Do NOT return paragraph text.
+Missing Required Skills:
+{', '.join(missing_skills) if missing_skills else "None"}
+
+Instructions:
+- Provide 6 to 8 specific, actionable suggestions.
+- Align suggestions with the job description.
+- Suggest how to naturally include missing skills.
+- Improve ATS keyword alignment.
+- Improve structure, clarity, and measurable achievements.
+- Write each suggestion on a new line.
+- Do NOT write paragraphs.
+- Do NOT add numbering.
 """
 
     try:
         response = client.chat.completions.create(
             model="zai-org/GLM-5:novita",
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.4,
-            max_tokens=300,
+            temperature=0.3,
+            max_tokens=500,
         )
 
-        # Safely extract content
-        text = response.choices[0].message.content if response.choices else ""
+        content = response.choices[0].message.content if response.choices else ""
 
-        if not text:
-            return [
-                f"Add experience with {skill}."
-                for skill in missing_skills
-            ]
+        if not content:
+            raise ValueError("Empty AI response")
 
-        # Convert response into clean list
-        lines = [
+        # Clean output
+        suggestions = [
             line.strip().lstrip("-• ").strip()
-            for line in text.split("\n")
+            for line in content.split("\n")
             if line.strip()
         ]
 
-        # If model returned paragraph instead of bullets
-        if len(lines) == 1:
-            lines = [
-                f"Add experience with {skill}."
-                for skill in missing_skills
-            ]
+        if len(suggestions) < 3:
+            raise ValueError("Low quality AI output")
 
-        return lines
+        return suggestions
 
     except Exception as e:
         print("AI ERROR:", e)
 
-        return [
-            f"Add experience with {skill}."
-            for skill in missing_skills
-        ]
+        # Smart fallback suggestions
+        fallback = []
+
+        for skill in missing_skills:
+            fallback.append(
+                f"Include hands-on experience with {skill} in your projects and describe measurable results."
+            )
+
+        fallback.append(
+            "Align resume keywords more closely with the job description to improve ATS matching."
+        )
+
+        fallback.append(
+            "Rewrite bullet points using action verbs and quantify achievements where possible."
+        )
+
+        return fallback[:8]
